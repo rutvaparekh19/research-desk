@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Research Desk</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <!-- ===================================================== -->
+
+    <!-- RESEARCH DESK V2 -->
+
+    <!-- ===================================================== -->
+
+    <div class="app-container">
+
+        <!-- ================================================ -->
+
+        <!-- SIDEBAR -->
+
+        <!-- ================================================ -->
+
+        <aside class="sidebar">
+
+            <div class="logo-area">
+
+                <h2>
+
+                    Organization Desk
+
+                </h2>
+
+                <p>
+
+                    Research Workspace
+
+                </p>
+
+            </div>
+
+            <button
+
+                id="create-project-button"
+
+                class="primary-button"
+
+            >
+
+                + Create Project
+
+            </button>
+
+            <div class="sidebar-divider"></div>
+
+            <h3 class="sidebar-heading">
+
+                Projects
+
+            </h3>
+
+            <div
+
+                id="project-list"
+
+                class="project-list"
+
+            >
+
+                <!--
+
+                Projects inserted by JavaScript
+
+                -->
+
+            </div>
+
+        </aside>
+
+        <!-- ================================================ -->
+
+        <!-- MAIN AREA -->
+
+        <!-- ================================================ -->
+
+        <main class="main-area">
+
+            <!-- ============================================ -->
+
+            <!-- LEVEL 0 -->
+
+            <!-- ORGANIZATION DESK -->
+
+            <!-- ============================================ -->
+
+            <section
+
+                id="organization-view"
+
+                class="view active-view"
+
+            >
+
+                <div class="welcome-card">
+
+                    <h1>
+
+                        Organization Desk
+
+                    </h1>
+
+                    <p>
+
+                        Organize complex research into projects,
+
+                        branches and structured workspaces.
+
+                    </p>
+
+                    <button
+
+                        id="organization-create-project"
+
+                        class="primary-button"
+
+                    >
+
+                        Create Project
+
+                    </button>
+
+                </div>
+
+                <div class="statistics-grid">
+
+                    <div class="stat-card">
+
+                        <h3>
+
+                            Projects
+
+                        </h3>
+
+                        <span
+
+                            id="project-count"
+
+                        >
+
+                            0
+
+                        </span>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <h3>
+
+                            Branches
+
+                        </h3>
+
+                        <span
+
+                            id="branch-count"
+
+                        >
+
+                            0
+
+                        </span>
+
+                    </div>
+
+                    <div class="stat-card">
+
+                        <h3>
+
+                            Evidence
+
+                        </h3>
+
+                        <span
+
+                            id="evidence-count"
+
+                        >
+
+                            0
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- ============================================ -->
+
+            <!-- LEVEL 1 -->
+
+            <!-- PROJECT WORKSPACE -->
+
+            <!-- ============================================ -->
+
+            <section
+
+                id="project-view"
+
+                class="view"
+
+            >
+
+                <header class="workspace-header">
+
+                    <button
+
+                        id="back-to-organization"
+
+                        class="secondary-button"
+
+                    >
+
+                        ← Organization Desk
+
+                    </button>
+
+                    <div class="workspace-title">
+
+                        <nav
+
+                            id="project-breadcrumb"
+
+                            class="breadcrumb"
+
+                            aria-label="Project location"
+
+                        ></nav>
+
+                        <h1
+
+                            id="project-title"
+
+                        >
+
+                            Project
+
+                        </h1>
+
+                        <p
+
+                            id="project-description"
+
+                        >
+
+                            Editable project description.
+
+                        </p>
+
+                    </div>
+
+                    <button
+
+                        id="add-branch-button"
+
+                        class="primary-button"
+
+                    >
+
+                        + Add Branch
+
+                    </button>
+
+                </header>
+
+                <div class="workspace-container">
+
+                    <!-- LEFT PANEL -->
+
+                    <aside
+
+                        class="navigation-panel"
+
+                    >
+
+                        <h2>
+
+                            Branches
+
+                        </h2>
+
+                        <div
+
+                            id="branch-list"
+
+                            class="branch-list"
+
+                        >
+
+                            <!--
+
+                            JS renders branches here
+
+                            -->
+
+                        </div>
+
+                    </aside>
+
+                    <!-- RIGHT PANEL -->
+
+                    <section
+
+                        class="notes-panel"
+
+                    >
+
+                        <div
+
+                            class="editor-toolbar"
+
+                        >
+
+                            <!--
+
+                            TipTap toolbar
+
+                            comes here later
+
+                            -->
+
+                        </div>
+
+                        <div
+
+                            id="project-editor"
+
+                            class="editor-placeholder"
+
+                        >
+
+                            <h2>
+
+                                Project Notes
+
+                            </h2>
+
+                            <p>
+
+                                This editor will later become
+
+                                a TipTap editor.
+
+                            </p>
+
+                            <p>
+
+                                Use this space for
+
+                                project goals,
+
+                                planning,
+
+                                milestones,
+
+                                checklists
+
+                                and overall strategy.
+
+                            </p>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+            </section>
+            <!-- ============================================ -->
+
+            <!-- LEVEL 2 -->
+
+            <!-- RESEARCH WORKSPACE -->
+
+            <!-- ============================================ -->
+
+            <section
+
+                id="research-view"
+
+                class="view"
+
+            >
+
+                <header class="workspace-header">
+
+                    <button
+
+                        id="back-to-project"
+
+                        class="secondary-button"
+
+                    >
+
+                        ← Project
+
+                    </button>
+
+                    <div class="workspace-title">
+
+                        <nav
+
+                            id="research-breadcrumb"
+
+                            class="breadcrumb"
+
+                            aria-label="Research location"
+
+                        ></nav>
+
+                        <h1
+
+                            id="research-title"
+
+                        >
+
+                            Branch
+
+                        </h1>
+
+                        <p
+
+                            id="research-description"
+
+                        >
+
+                            Editable branch description.
+
+                        </p>
+
+                    </div>
+
+                    <button
+
+                        id="create-child-branch-button"
+
+                        class="primary-button"
+
+                    >
+
+                        + Add Branch
+
+                    </button>
+
+                </header>
+
+                <div class="workspace-container">
+
+                    <!-- ================================= -->
+
+                    <!-- LEFT SIDE -->
+
+                    <!-- ================================= -->
+
+                    <aside
+
+                        class="evidence-panel"
+
+                    >
+
+                        <div class="panel-group">
+
+                            <h2>
+
+                                Evidence
+
+                            </h2>
+
+                            <section class="panel-card">
+
+                                <div class="panel-header">
+
+                                    <h3>
+
+                                        Files
+
+                                    </h3>
+
+                                    <button
+
+                                        id="add-file-button"
+
+                                        class="small-button"
+
+                                    >
+
+                                        +
+
+                                    </button>
+
+                                </div>
+
+                                <div
+
+                                    id="file-list"
+
+                                >
+
+                                    <!--
+
+                                    File cards generated by JS
+
+                                    -->
+
+                                </div>
+
+                            </section>
+
+                            <section class="panel-card">
+
+                                <div class="panel-header">
+
+                                    <h3>
+
+                                        Links
+
+                                    </h3>
+
+                                    <button
+
+                                        id="add-link-button"
+
+                                        class="small-button"
+
+                                    >
+
+                                        +
+
+                                    </button>
+
+                                </div>
+
+                                <div
+
+                                    id="link-list"
+
+                                >
+
+                                    <!--
+
+                                    Link cards generated by JS
+
+                                    -->
+
+                                </div>
+
+                            </section>
+
+                        </div>
+
+                        <div class="panel-group">
+
+                            <h2>
+
+                                Structure
+
+                            </h2>
+
+                            <section class="panel-card">
+
+                                <div class="panel-header">
+
+                                    <h3>
+
+                                        Child Branches
+
+                                    </h3>
+
+                                    <button
+
+                                        id="child-branch-button"
+
+                                        class="small-button"
+
+                                    >
+
+                                        +
+
+                                    </button>
+
+                                </div>
+
+                                <div
+
+                                    id="child-branch-list"
+
+                                >
+
+                                    <!--
+
+                                    Child Branches
+
+                                    -->
+
+                                </div>
+
+                            </section>
+
+                        </div>
+
+                    </aside>
+
+                    <!-- ================================= -->
+
+                    <!-- RIGHT SIDE -->
+
+                    <!-- ================================= -->
+
+                    <section
+
+                        class="notes-panel"
+
+                    >
+
+                        <div
+
+                            class="editor-toolbar"
+
+                        >
+
+                            <!--
+
+                            Future TipTap Toolbar
+
+                            -->
+
+                        </div>
+
+                        <div
+
+                            id="research-editor"
+
+                            class="editor-placeholder"
+
+                        >
+
+                            <h2>
+
+                                Research Notes
+
+                            </h2>
+
+                            <p>
+
+                                This workspace is used for
+
+                                detailed research.
+
+                            </p>
+
+                            <p>
+
+                                TipTap will later support:
+
+                            </p>
+
+                            <ul>
+
+                                <li>Titles</li>
+
+                                <li>Subtitles</li>
+
+                                <li>Bullet Points</li>
+
+                                <li>Checklists</li>
+
+                                <li>Bold</li>
+
+                                <li>Highlight</li>
+
+                                <li>Hyperlinks</li>
+
+                                <li>Collapsible Sections</li>
+
+                            </ul>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+            </section>
+
+            <!-- ============================================ -->
+
+            <!-- LEVEL 3 -->
+
+            <!-- CHILD BRANCH WORKSPACE -->
+
+            <!-- Same UI as Research Workspace -->
+
+            <!-- Only difference:
+
+                 Add Branch button hidden by JS
+
+            -->
+
+            <section
+
+                id="child-branch-view"
+
+                class="view"
+
+            >
+
+                <!--
+
+                JavaScript reuses the same
+
+                workspace layout.
+
+                This section intentionally
+
+                stays empty.
+
+                -->
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- CREATE PROJECT MODAL -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="project-modal"
+
+        class="modal"
+
+    >
+
+        <div class="modal-content">
+
+            <h2>
+
+                Create Project
+
+            </h2>
+
+            <label>
+
+                Project Name
+
+            </label>
+
+            <input
+
+                id="project-name-input"
+
+                type="text"
+
+            >
+
+            <label>
+
+                Description
+
+            </label>
+
+            <textarea
+
+                id="project-description-input"
+
+            ></textarea>
+
+            <div class="modal-buttons">
+
+                <button
+
+                    id="cancel-project"
+
+                    class="secondary-button"
+
+                >
+
+                    Cancel
+
+                </button>
+
+                <button
+
+                    id="save-project"
+
+                    class="primary-button"
+
+                >
+
+                    Create
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+    <!-- ============================================ -->
+
+    <!-- CREATE BRANCH MODAL -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="branch-modal"
+
+        class="modal"
+
+    >
+
+        <div class="modal-content">
+
+            <h2>
+
+                Create Branch
+
+            </h2>
+
+            <label>
+
+                Branch Name
+
+            </label>
+
+            <input
+
+                id="branch-name-input"
+
+                type="text"
+
+            >
+
+            <label>
+
+                Description
+
+            </label>
+
+            <textarea
+
+                id="branch-description-input"
+
+            ></textarea>
+
+            <div class="modal-buttons">
+
+                <button
+
+                    id="cancel-branch"
+
+                    class="secondary-button"
+
+                >
+
+                    Cancel
+
+                </button>
+
+                <button
+
+                    id="save-branch"
+
+                    class="primary-button"
+
+                >
+
+                    Create
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- ADD FILE MODAL -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="file-modal"
+
+        class="modal"
+
+    >
+
+        <div class="modal-content">
+
+            <h2>
+
+                Add File
+
+            </h2>
+
+            <label>
+
+                Display Name
+
+            </label>
+
+            <input
+
+                id="file-name-input"
+
+                type="text"
+
+            >
+
+            <label>
+
+                Choose File
+
+            </label>
+
+            <input
+
+                id="file-input"
+
+                type="file"
+
+            >
+
+            <div class="modal-buttons">
+
+                <button
+
+                    id="cancel-file"
+
+                    class="secondary-button"
+
+                >
+
+                    Cancel
+
+                </button>
+
+                <button
+
+                    id="save-file"
+
+                    class="primary-button"
+
+                >
+
+                    Save
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- ADD LINK MODAL -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="link-modal"
+
+        class="modal"
+
+    >
+
+        <div class="modal-content">
+
+            <h2>
+
+                Add Link
+
+            </h2>
+
+            <label>
+
+                Display Name
+
+            </label>
+
+            <input
+
+                id="link-name-input"
+
+                type="text"
+
+            >
+
+            <label>
+
+                URL
+
+            </label>
+
+            <input
+
+                id="link-url-input"
+
+                type="url"
+
+                placeholder="https://"
+
+            >
+
+            <div class="modal-buttons">
+
+                <button
+
+                    id="cancel-link"
+
+                    class="secondary-button"
+
+                >
+
+                    Cancel
+
+                </button>
+
+                <button
+
+                    id="save-link"
+
+                    class="primary-button"
+
+                >
+
+                    Save
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- DELETE CONFIRMATION MODAL -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="delete-modal"
+
+        class="modal"
+
+    >
+
+        <div class="modal-content delete-modal">
+
+            <h2>
+
+                Delete
+
+            </h2>
+
+            <p
+
+                id="delete-message"
+
+            >
+
+                This action cannot be undone.
+
+            </p>
+
+            <div class="modal-buttons">
+
+                <button
+
+                    id="cancel-delete"
+
+                    class="secondary-button"
+
+                >
+
+                    Cancel
+
+                </button>
+
+                <button
+
+                    id="confirm-delete"
+
+                    class="danger-button"
+
+                >
+
+                    Delete
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- LOADING OVERLAY -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="loading-overlay"
+
+        class="loading-overlay"
+
+    >
+
+        <div class="loading-spinner"></div>
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- FUTURE NOTIFICATIONS -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="toast-container"
+
+    >
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- FUTURE CONTEXT MENU -->
+
+    <!-- ============================================ -->
+
+    <div
+
+        id="context-menu"
+
+        class="context-menu"
+
+    >
+
+    </div>
+
+    <!-- ============================================ -->
+
+    <!-- FUTURE SIDEBAR SEARCH (V2) -->
+
+    <!-- ============================================ -->
+
+    <!--
+
+    Search has intentionally been excluded
+
+    from MVP.
+
+    This placeholder remains for future
+
+    implementation.
+
+    -->
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
