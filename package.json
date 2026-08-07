@@ -12,6 +12,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@tiptap/core": "^3.29.2",
+    "@tiptap/extension-highlight": "^3.29.2",
+    "@tiptap/extension-link": "^3.29.2",
+    "@tiptap/extension-task-item": "^3.29.2",
+    "@tiptap/extension-task-list": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
     "express": "^5.2.1"
   }
 }
