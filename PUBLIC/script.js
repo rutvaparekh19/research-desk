@@ -3,6 +3,8 @@
    ========================================================== */
 
 const App = {
+    storageKey: "researchDeskState",
+
     state: {
         projects: [],
         currentProjectId: null,
@@ -17,6 +19,7 @@ const App = {
     init() {
         this.cacheElements();
         this.captureTemplates();
+        this.loadState();
         this.bindEvents();
         this.renderAll();
         this.showView("organization-view");
@@ -203,6 +206,7 @@ const App = {
         };
 
         this.state.projects.push(project);
+        this.saveState();
         this.closeModal("project-modal");
         this.renderAll();
         this.openProject(project.id);
@@ -248,6 +252,7 @@ const App = {
             project.branches.push(branch);
         }
 
+        this.saveState();
         this.closeModal("branch-modal");
         this.renderAll();
 
@@ -314,19 +319,31 @@ const App = {
             return;
         }
 
-        workspace.files.push({
-            id: this.makeId("file"),
-            name: enteredName || selectedFile.name,
-            file: selectedFile,
-            type: selectedFile.type,
-            size: selectedFile.size
+        const reader = new FileReader();
+
+        reader.addEventListener("load", () => {
+            workspace.files.push({
+                id: this.makeId("file"),
+                name: enteredName || selectedFile.name,
+                file: selectedFile,
+                dataUrl: typeof reader.result === "string" ? reader.result : null,
+                type: selectedFile.type,
+                size: selectedFile.size
+            });
+
+            this.saveState();
+            this.closeModal("file-modal");
+            this.clearInputs("file-name-input", "file-input");
+            this.renderFiles();
+            this.renderStatistics();
+            this.showToast("File added.");
         });
 
-        this.closeModal("file-modal");
-        this.clearInputs("file-name-input", "file-input");
-        this.renderFiles();
-        this.renderStatistics();
-        this.showToast("File added temporarily.");
+        reader.addEventListener("error", () => {
+            this.showToast("The file could not be added.");
+        });
+
+        reader.readAsDataURL(selectedFile);
     },
 
     createLink() {
@@ -360,6 +377,7 @@ const App = {
             url: parsedUrl.href
         });
 
+        this.saveState();
         this.closeModal("link-modal");
         this.clearInputs("link-name-input", "link-url-input");
         this.renderLinks();
@@ -371,8 +389,9 @@ const App = {
         const workspace = this.getCurrentWorkspace();
         const file = workspace && workspace.files.find((item) => item.id === fileId);
 
-        if (file && file.file) {
-            window.open(URL.createObjectURL(file.file), "_blank", "noopener");
+        if (file && (file.file || file.dataUrl)) {
+            const source = file.file ? URL.createObjectURL(file.file) : file.dataUrl;
+            window.open(source, "_blank", "noopener");
         }
     },
 
@@ -399,6 +418,7 @@ const App = {
         const name = this.elements["project-title"].textContent.trim();
         project.name = name || project.name;
         project.description = this.elements["project-description"].textContent.trim();
+        this.saveState();
         this.renderSidebar();
         this.renderProject();
     },
@@ -413,6 +433,7 @@ const App = {
         const name = this.elements["research-title"].textContent.trim();
         workspace.name = name || workspace.name;
         workspace.description = this.elements["research-description"].textContent.trim();
+        this.saveState();
         this.renderProject();
         this.renderResearch();
     },
@@ -422,6 +443,7 @@ const App = {
 
         if (project) {
             project.notes = this.elements["project-editor"].innerHTML;
+            this.saveState();
         }
     },
 
@@ -430,6 +452,7 @@ const App = {
 
         if (workspace) {
             workspace.notes = this.elements["research-editor"].innerHTML;
+            this.saveState();
         }
     },
 
@@ -481,6 +504,7 @@ const App = {
             if (parentBranch) {
                 this.completeAnimatedRemoval("child-branch-list", pendingDelete.id, () => {
                     parentBranch.childBranches = parentBranch.childBranches.filter((item) => item.id !== pendingDelete.id);
+                    this.saveState();
                     this.renderChildBranches();
                     this.renderStatistics();
                     this.showToast("Item deleted.");
@@ -492,6 +516,7 @@ const App = {
         if (pendingDelete.type === "file" && workspace) {
             this.completeAnimatedRemoval("file-list", pendingDelete.id, () => {
                 workspace.files = workspace.files.filter((item) => item.id !== pendingDelete.id);
+                this.saveState();
                 this.renderFiles();
                 this.renderStatistics();
                 this.showToast("Item deleted.");
@@ -502,6 +527,7 @@ const App = {
         if (pendingDelete.type === "link" && workspace) {
             this.completeAnimatedRemoval("link-list", pendingDelete.id, () => {
                 workspace.links = workspace.links.filter((item) => item.id !== pendingDelete.id);
+                this.saveState();
                 this.renderLinks();
                 this.renderStatistics();
                 this.showToast("Item deleted.");
@@ -509,6 +535,7 @@ const App = {
             return;
         }
 
+        this.saveState();
         this.state.pendingDelete = null;
         this.closeModal("delete-modal");
         this.renderAll();
@@ -831,6 +858,142 @@ const App = {
 
             container.appendChild(element);
         });
+    },
+
+    /* ==========================================================
+       LOCAL STORAGE
+       ========================================================== */
+
+    saveState() {
+        const savedState = {
+            projects: this.state.projects.map((project) => this.serializeProject(project))
+        };
+
+        try {
+            localStorage.setItem(this.storageKey, JSON.stringify(savedState));
+        } catch (error) {
+            console.warn("Research Desk could not save local data.", error);
+        }
+    },
+
+    loadState() {
+        const savedState = localStorage.getItem(this.storageKey);
+
+        if (!savedState) {
+            return;
+        }
+
+        try {
+            const parsedState = JSON.parse(savedState);
+
+            if (!this.isStoredStateValid(parsedState)) {
+                throw new Error("Invalid saved state");
+            }
+
+            this.state.projects = parsedState.projects.map((project) => this.restoreProject(project));
+        } catch (error) {
+            localStorage.removeItem(this.storageKey);
+            this.state.projects = [];
+        }
+    },
+
+    serializeProject(project) {
+        return {
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            notes: project.notes,
+            branches: project.branches.map((branch) => this.serializeWorkspace(branch))
+        };
+    },
+
+    serializeWorkspace(workspace) {
+        return {
+            id: workspace.id,
+            name: workspace.name,
+            description: workspace.description,
+            notes: workspace.notes,
+            files: workspace.files.map((file) => ({
+                id: file.id,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                dataUrl: file.dataUrl || null
+            })),
+            links: workspace.links.map((link) => ({
+                id: link.id,
+                name: link.name,
+                url: link.url
+            })),
+            childBranches: workspace.childBranches.map((branch) => this.serializeWorkspace(branch))
+        };
+    },
+
+    restoreProject(project) {
+        return {
+            id: project.id,
+            name: project.name,
+            description: project.description,
+            notes: project.notes,
+            branches: project.branches.map((branch) => this.restoreWorkspace(branch))
+        };
+    },
+
+    restoreWorkspace(workspace) {
+        return {
+            id: workspace.id,
+            name: workspace.name,
+            description: workspace.description,
+            notes: workspace.notes,
+            files: workspace.files.map((file) => ({ ...file, file: null })),
+            links: workspace.links.map((link) => ({ ...link })),
+            childBranches: workspace.childBranches.map((branch) => this.restoreWorkspace(branch))
+        };
+    },
+
+    isStoredStateValid(savedState) {
+        return Boolean(savedState) && Array.isArray(savedState.projects) && savedState.projects.every((project) => (
+            this.isStoredProject(project)
+        ));
+    },
+
+    isStoredProject(project) {
+        return this.isStoredEntity(project) && Array.isArray(project.branches) && project.branches.every((branch) => (
+            this.isStoredWorkspace(branch)
+        ));
+    },
+
+    isStoredWorkspace(workspace) {
+        return this.isStoredEntity(workspace) &&
+            Array.isArray(workspace.files) && workspace.files.every((file) => this.isStoredFile(file)) &&
+            Array.isArray(workspace.links) && workspace.links.every((link) => this.isStoredLink(link)) &&
+            Array.isArray(workspace.childBranches) && workspace.childBranches.every((branch) => (
+                this.isStoredWorkspace(branch)
+            ));
+    },
+
+    isStoredEntity(entity) {
+        return Boolean(entity) &&
+            typeof entity.id === "string" &&
+            typeof entity.name === "string" &&
+            typeof entity.description === "string" &&
+            typeof entity.notes === "string";
+    },
+
+    isStoredFile(file) {
+        return Boolean(file) &&
+            typeof file.id === "string" &&
+            typeof file.name === "string" &&
+            typeof file.type === "string" &&
+            typeof file.size === "number" &&
+            (typeof file.dataUrl === "string" || file.dataUrl === null);
+    },
+
+    isStoredLink(link) {
+        return Boolean(link) &&
+            typeof link.id === "string" &&
+            typeof link.name === "string" &&
+            typeof link.url === "string";
     },
 
     /* ==========================================================
