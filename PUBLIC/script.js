@@ -14,11 +14,10 @@ const App = {
     },
 
     elements: {},
-    templates: {},
+    editor: null,
 
     init() {
         this.cacheElements();
-        this.captureTemplates();
         this.loadState();
         this.bindEvents();
         this.renderAll();
@@ -35,9 +34,9 @@ const App = {
         [
             "organization-view", "project-view", "research-view",
             "project-list", "project-count", "branch-count", "evidence-count",
-            "project-title", "project-description", "project-editor", "branch-list",
+            "project-title", "project-description", "project-editor", "project-editor-toolbar", "branch-list",
             "project-breadcrumb",
-            "research-title", "research-description", "research-editor",
+            "research-title", "research-description", "research-editor", "research-editor-toolbar",
             "research-breadcrumb",
             "file-list", "link-list", "child-branch-list",
             "create-child-branch-button", "child-branch-button", "back-to-project",
@@ -49,11 +48,6 @@ const App = {
         ].forEach((id) => {
             this.elements[id] = document.getElementById(id);
         });
-    },
-
-    captureTemplates() {
-        this.templates.projectEditor = this.elements["project-editor"].innerHTML;
-        this.templates.researchEditor = this.elements["research-editor"].innerHTML;
     },
 
     bindEvents() {
@@ -86,9 +80,6 @@ const App = {
         this.on("project-description", "blur", () => this.saveProjectDetails());
         this.on("research-title", "blur", () => this.saveWorkspaceDetails());
         this.on("research-description", "blur", () => this.saveWorkspaceDetails());
-        this.on("project-editor", "input", () => this.saveProjectNotes());
-        this.on("research-editor", "input", () => this.saveWorkspaceNotes());
-
         document.querySelectorAll(".modal").forEach((modal) => {
             modal.addEventListener("click", (event) => {
                 if (event.target === modal) {
@@ -119,6 +110,10 @@ const App = {
        ========================================================== */
 
     showView(viewId) {
+        if (viewId === "organization-view") {
+            this.destroyEditor();
+        }
+
         document.querySelectorAll(".view").forEach((view) => {
             view.classList.toggle("active-view", view.id === viewId);
         });
@@ -201,7 +196,7 @@ const App = {
             id: this.makeId("project"),
             name,
             description,
-            notes: "",
+            notes: this.emptyEditorDocument(),
             branches: []
         };
 
@@ -298,7 +293,7 @@ const App = {
             id: this.makeId("branch"),
             name,
             description,
-            notes: "",
+            notes: this.emptyEditorDocument(),
             files: [],
             links: [],
             childBranches: []
@@ -419,8 +414,7 @@ const App = {
         project.name = name || project.name;
         project.description = this.elements["project-description"].textContent.trim();
         this.saveState();
-        this.renderSidebar();
-        this.renderProject();
+        this.renderAll();
     },
 
     saveWorkspaceDetails() {
@@ -434,24 +428,23 @@ const App = {
         workspace.name = name || workspace.name;
         workspace.description = this.elements["research-description"].textContent.trim();
         this.saveState();
-        this.renderProject();
-        this.renderResearch();
+        this.renderAll();
     },
 
-    saveProjectNotes() {
+    saveProjectNotes(notes) {
         const project = this.getCurrentProject();
 
         if (project) {
-            project.notes = this.elements["project-editor"].innerHTML;
+            project.notes = notes;
             this.saveState();
         }
     },
 
-    saveWorkspaceNotes() {
+    saveWorkspaceNotes(notes) {
         const workspace = this.getCurrentWorkspace();
 
         if (workspace) {
-            workspace.notes = this.elements["research-editor"].innerHTML;
+            workspace.notes = notes;
             this.saveState();
         }
     },
@@ -550,12 +543,10 @@ const App = {
         this.renderSidebar();
         this.renderStatistics();
 
-        if (this.getCurrentProject()) {
-            this.renderProject();
-        }
-
         if (this.getCurrentWorkspace()) {
             this.renderResearch();
+        } else if (this.getCurrentProject()) {
+            this.renderProject();
         }
     },
 
@@ -609,8 +600,12 @@ const App = {
 
         this.renderEditable(this.elements["project-title"], project.name);
         this.renderEditable(this.elements["project-description"], project.description);
-        this.elements["project-editor"].innerHTML = project.notes || this.templates.projectEditor;
-        this.elements["project-editor"].contentEditable = "true";
+        this.mountEditor({
+            element: this.elements["project-editor"],
+            toolbar: this.elements["project-editor-toolbar"],
+            content: project.notes,
+            onUpdate: (notes) => this.saveProjectNotes(notes)
+        });
         this.renderBreadcrumb(this.elements["project-breadcrumb"], [
             { label: "Organization Desk", onClick: () => this.goToOrganization() },
             { label: project.name }
@@ -650,8 +645,12 @@ const App = {
         const isChildBranch = Boolean(this.state.currentChildBranchId);
         this.renderEditable(this.elements["research-title"], workspace.name);
         this.renderEditable(this.elements["research-description"], workspace.description);
-        this.elements["research-editor"].innerHTML = workspace.notes || this.templates.researchEditor;
-        this.elements["research-editor"].contentEditable = "true";
+        this.mountEditor({
+            element: this.elements["research-editor"],
+            toolbar: this.elements["research-editor-toolbar"],
+            content: workspace.notes,
+            onUpdate: (notes) => this.saveWorkspaceNotes(notes)
+        });
         this.elements["back-to-project"].textContent = isChildBranch ? "← Parent Branch" : "← Project";
         this.elements["create-child-branch-button"].hidden = isChildBranch;
         this.elements["child-branch-button"].hidden = isChildBranch;
@@ -818,6 +817,20 @@ const App = {
         element.contentEditable = "true";
     },
 
+    mountEditor(options) {
+        if (!this.editor) {
+            this.editor = new window.ResearchDeskEditor();
+        }
+
+        this.editor.mount(options);
+    },
+
+    destroyEditor() {
+        if (this.editor) {
+            this.editor.destroy();
+        }
+    },
+
     renderResearchBreadcrumb(workspace, isChildBranch) {
         const project = this.getCurrentProject();
         const branch = project && this.getBranch(project, this.state.currentBranchId);
@@ -977,7 +990,7 @@ const App = {
             typeof entity.id === "string" &&
             typeof entity.name === "string" &&
             typeof entity.description === "string" &&
-            typeof entity.notes === "string";
+            (typeof entity.notes === "string" || this.isEditorDocument(entity.notes));
     },
 
     isStoredFile(file) {
@@ -994,6 +1007,10 @@ const App = {
             typeof link.id === "string" &&
             typeof link.name === "string" &&
             typeof link.url === "string";
+    },
+
+    isEditorDocument(notes) {
+        return Boolean(notes) && notes.type === "doc" && Array.isArray(notes.content);
     },
 
     /* ==========================================================
@@ -1036,6 +1053,10 @@ const App = {
 
     makeId(prefix) {
         return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    },
+
+    emptyEditorDocument() {
+        return { type: "doc", content: [{ type: "paragraph" }] };
     },
 
     clearInputs(...ids) {

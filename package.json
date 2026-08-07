@@ -4,6 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
+    "build": "esbuild ././src/editor.js --bundle --format=iife --minify --outfile=./public/editor.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
@@ -13,11 +14,16 @@
   "type": "commonjs",
   "dependencies": {
     "@tiptap/core": "^3.29.2",
+    "@tiptap/extension-details": "^3.29.2",
     "@tiptap/extension-highlight": "^3.29.2",
     "@tiptap/extension-link": "^3.29.2",
+    "@tiptap/extension-placeholder": "^3.29.2",
     "@tiptap/extension-task-item": "^3.29.2",
     "@tiptap/extension-task-list": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }
