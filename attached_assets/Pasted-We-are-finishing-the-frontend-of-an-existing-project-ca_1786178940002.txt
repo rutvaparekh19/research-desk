@@ -1,0 +1,183 @@
+We are finishing the frontend of an existing project called Research Desk.
+
+IMPORTANT: Work on the existing codebase connected from GitHub. Do not rebuild the application from scratch.
+
+ABOUT THE PRODUCT
+
+Research Desk is a simple "Research Operating System" designed for organizing research, ideas, projects and long-term thinking.
+
+The core hierarchy is:
+
+Organization Desk
+→ Project
+→ Branch
+→ Child Branch
+
+A Project contains project notes and branches.
+
+A Branch contains notes, child branches, files and links.
+
+A Child Branch contains notes, files and links.
+
+The philosophy is:
+simple workflow, minimal clutter, strong organization.
+
+This is NOT meant to become Notion, Obsidian or a general-purpose productivity suite.
+
+CURRENT STATE
+
+The application already has:
+
+- Complete basic frontend/UI
+- Project/branch/child-branch navigation
+- Breadcrumbs
+- Files and links
+- Delete confirmations
+- localStorage persistence
+- Git/GitHub
+- TipTap rich-text editor
+- esbuild bundling
+- Dark desktop-style interface
+
+Do not replace the existing architecture.
+
+Do not introduce React, Vue, Next.js, Vite, or another framework.
+
+Do not implement SQLite, APIs, AI, search, cloud sync, collaboration, or other future features.
+
+TASK
+
+Finish the frontend polish around the TipTap editor and make the current frontend feel production-ready for v1.
+
+Specifically:
+
+1. TOOLBAR
+
+Improve the TipTap toolbar.
+
+Replace plain text labels where appropriate with clean, recognizable icons.
+
+Required tools:
+
+- H1
+- H2
+- Collapsible Section
+- Bold
+- Bullet List
+- Checklist
+- Highlight
+- Link
+- Divider
+
+Use a consistent icon style and make the toolbar visually cohesive with the existing dark theme.
+
+Add:
+- clean spacing
+- hover states
+- active states where relevant
+- tooltips/title attributes where useful
+
+Do not make the toolbar oversized.
+
+2. EDITOR SPACING
+
+The current editor has too much vertical space.
+
+Make the writing experience denser.
+
+Reduce:
+- paragraph margins
+- spacing between bullet points
+- spacing between checklist items
+- unnecessary space between lines
+
+Aim for a compact research-writing experience similar in density to a technical notes application.
+
+Do not make it cramped.
+
+3. TEXT COLOUR
+
+Slightly brighten normal body text for readability.
+
+Keep headings bright and prominent.
+
+Maintain the existing dark visual language.
+
+4. PLACEHOLDERS
+
+There should never be repeated "Write research notes..." text inside the document.
+
+An empty editor should show ONE subtle placeholder.
+
+Once the user types, the placeholder disappears.
+
+Placeholder text must not become stored document content.
+
+5. COLLAPSIBLE SECTIONS
+
+Keep the existing collapsible-section functionality.
+
+Improve its visual styling:
+
+- clean section header
+- clear expand/collapse icon
+- subtle border/background
+- good indentation
+- compact spacing
+- visually distinct section title
+
+It should feel native to Research Desk rather than like a separate widget.
+
+6. OVERALL UI POLISH
+
+Look at the frontend as a whole and make small visual improvements where clearly necessary:
+
+- consistent button styling
+- consistent borders
+- consistent corner radius
+- consistent spacing
+- clean typography
+- polished hover states
+- good visual hierarchy
+
+Do NOT make dramatic design changes.
+
+Preserve the existing layout and identity.
+
+7. TESTING
+
+After making the changes, test:
+
+- Project notes
+- Branch notes
+- Child branch notes
+- switching between projects
+- switching between branches
+- switching between child branches
+- TipTap formatting
+- checklist
+- links
+- highlights
+- collapsible sections
+- autosave/localStorage
+- refresh persistence
+
+Make sure the existing project/branch/file/link functionality still works.
+
+IMPORTANT CONSTRAINTS
+
+Do not change the data model unless absolutely necessary.
+
+Do not remove existing functionality.
+
+Do not add unnecessary dependencies.
+
+If an icon library is already available, use it. Otherwise use a lightweight solution appropriate for the existing vanilla JavaScript architecture.
+
+Keep the code maintainable and consistent with the existing project.
+
+When finished, give me a short summary of:
+1. what you changed
+2. what files you changed
+3. what you tested
+4. whether the frontend can now be considered complete

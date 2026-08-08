@@ -4,7 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "build": "esbuild ././src/editor.js --bundle --format=iife --minify --outfile=./public/editor.js",
+    "build": "esbuild ./src/editor.js --bundle --format=iife --minify --outfile=./PUBLIC/editor.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },

@@ -80,8 +80,8 @@ class ResearchDeskEditor {
     renderToolbar() {
         if (!this.editor || !this.toolbar) return;
         const controls = [
-            [toolbarIcons.heading, "Heading", () => this.editor.chain().focus().toggleHeading({ level: 1 }).run(), () => this.editor.isActive("heading", { level: 1 })],
-            [toolbarIcons.subheading, "Subheading", () => this.editor.chain().focus().toggleHeading({ level: 2 }).run(), () => this.editor.isActive("heading", { level: 2 })],
+            [toolbarIcons.heading, "H1 — Heading", () => this.editor.chain().focus().toggleHeading({ level: 1 }).run(), () => this.editor.isActive("heading", { level: 1 })],
+            [toolbarIcons.subheading, "H2 — Subheading", () => this.editor.chain().focus().toggleHeading({ level: 2 }).run(), () => this.editor.isActive("heading", { level: 2 })],
             [toolbarIcons.section, "Collapsible section", () => this.editor.chain().focus().setDetails().run(), () => this.editor.isActive("details")],
             [toolbarIcons.bold, "Bold", () => this.editor.chain().focus().toggleBold().run(), () => this.editor.isActive("bold")],
             [toolbarIcons.bulletList, "Bullet list", () => this.editor.chain().focus().toggleBulletList().run(), () => this.editor.isActive("bulletList")],
