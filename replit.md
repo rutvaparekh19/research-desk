@@ -13,5 +13,6 @@ The `Start application` workflow runs `npm start` on port 5000. The frontend is 
 ## Notes
 
 - Editor source lives in `src/editor.js`; rebuild after changing it.
-- Research data is persisted in the browser with `localStorage`.
-- No external services or secrets are required for the current frontend.
+- Research data is persisted in SQLite at `data/research.db` through REST APIs under `/api`.
+- On first load, existing browser `localStorage` data is migrated to SQLite and backed up to `researchDeskStateBackup`.
+- No external services or secrets are required for the current application.

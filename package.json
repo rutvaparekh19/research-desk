@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "build": "esbuild ./src/editor.js --bundle --format=iife --minify --outfile=./PUBLIC/editor.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node scripts/test-repository.js",
+    "test:api": "node scripts/test-api.js",
     "start": "node server.js"
   },
   "keywords": [],
@@ -21,6 +22,7 @@
     "@tiptap/extension-task-item": "^3.29.2",
     "@tiptap/extension-task-list": "^3.29.2",
     "@tiptap/starter-kit": "^3.29.2",
+    "better-sqlite3": "^13.0.3",
     "express": "^5.2.1"
   },
   "devDependencies": {

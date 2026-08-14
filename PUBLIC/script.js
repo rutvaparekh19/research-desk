@@ -4,6 +4,8 @@
 
 const App = {
     storageKey: "researchDeskState",
+    migrationBackupKey: "researchDeskStateBackup",
+    noteSaveTimers: new Map(),
 
     state: {
         projects: [],
@@ -16,9 +18,9 @@ const App = {
     elements: {},
     editor: null,
 
-    init() {
+    async init() {
         this.cacheElements();
-        this.loadState();
+        await this.loadState();
         this.bindEvents();
         this.renderAll();
         this.showView("organization-view");
@@ -182,7 +184,7 @@ const App = {
        PROJECTS AND BRANCHES
        ========================================================== */
 
-    createProject() {
+    async createProject() {
         const name = this.elements["project-name-input"].value.trim();
         const description = this.elements["project-description-input"].value.trim();
 
@@ -200,12 +202,16 @@ const App = {
             branches: []
         };
 
-        this.state.projects.push(project);
-        this.saveState();
-        this.closeModal("project-modal");
-        this.renderAll();
-        this.openProject(project.id);
-        this.showToast("Project created.");
+        try {
+            const createdProject = await window.ResearchDeskApi.createProject(project);
+            this.state.projects.push(this.restoreProject(createdProject));
+            this.closeModal("project-modal");
+            this.renderAll();
+            this.openProject(project.id);
+            this.showToast("Project created.");
+        } catch (error) {
+            this.showToast(error.message || "Project could not be created.");
+        }
     },
 
     openProject(projectId) {
@@ -222,7 +228,7 @@ const App = {
         this.showView("project-view");
     },
 
-    createBranch() {
+    async createBranch() {
         const project = this.getCurrentProject();
         const name = this.elements["branch-name-input"].value.trim();
         const description = this.elements["branch-description-input"].value.trim();
@@ -235,29 +241,48 @@ const App = {
 
         const branch = this.makeWorkspace(name, description);
 
-        if (this.state.currentBranchId) {
-            const parentBranch = this.getBranch(project, this.state.currentBranchId);
+        try {
+            if (this.state.currentBranchId) {
+                const parentBranch = this.getBranch(project, this.state.currentBranchId);
 
-            if (!parentBranch) {
-                return;
+                if (!parentBranch) {
+                    return;
+                }
+
+                const createdChildBranch = await window.ResearchDeskApi.createChildBranch({
+                    id: branch.id,
+                    branchId: parentBranch.id,
+                    name: branch.name,
+                    description: branch.description,
+                    notes: branch.notes
+                });
+
+                parentBranch.childBranches.push(this.restoreWorkspace(createdChildBranch));
+            } else {
+                const createdBranch = await window.ResearchDeskApi.createBranch({
+                    id: branch.id,
+                    projectId: project.id,
+                    name: branch.name,
+                    description: branch.description,
+                    notes: branch.notes
+                });
+
+                project.branches.push(this.restoreWorkspace(createdBranch));
             }
 
-            parentBranch.childBranches.push(branch);
-        } else {
-            project.branches.push(branch);
+            this.closeModal("branch-modal");
+            this.renderAll();
+
+            if (this.state.currentBranchId) {
+                this.openChildBranch(branch.id);
+            } else {
+                this.openBranch(branch.id);
+            }
+
+            this.showToast("Branch created.");
+        } catch (error) {
+            this.showToast(error.message || "Branch could not be created.");
         }
-
-        this.saveState();
-        this.closeModal("branch-modal");
-        this.renderAll();
-
-        if (this.state.currentBranchId) {
-            this.openChildBranch(branch.id);
-        } else {
-            this.openBranch(branch.id);
-        }
-
-        this.showToast("Branch created.");
     },
 
     openBranch(branchId) {
@@ -316,22 +341,41 @@ const App = {
 
         const reader = new FileReader();
 
-        reader.addEventListener("load", () => {
-            workspace.files.push({
+        reader.addEventListener("load", async () => {
+            const fileRecord = {
                 id: this.makeId("file"),
                 name: enteredName || selectedFile.name,
                 file: selectedFile,
                 dataUrl: typeof reader.result === "string" ? reader.result : null,
                 type: selectedFile.type,
                 size: selectedFile.size
-            });
+            };
 
-            this.saveState();
-            this.closeModal("file-modal");
-            this.clearInputs("file-name-input", "file-input");
-            this.renderFiles();
-            this.renderStatistics();
-            this.showToast("File added.");
+            try {
+                const payload = {
+                    id: fileRecord.id,
+                    name: fileRecord.name,
+                    type: fileRecord.type,
+                    size: fileRecord.size,
+                    dataUrl: fileRecord.dataUrl
+                };
+
+                if (this.state.currentChildBranchId) {
+                    payload.childBranchId = this.state.currentChildBranchId;
+                } else {
+                    payload.branchId = this.state.currentBranchId;
+                }
+
+                const createdFile = await window.ResearchDeskApi.createFile(payload);
+                workspace.files.push({ ...createdFile, file: selectedFile });
+                this.closeModal("file-modal");
+                this.clearInputs("file-name-input", "file-input");
+                this.renderFiles();
+                this.renderStatistics();
+                this.showToast("File added.");
+            } catch (error) {
+                this.showToast(error.message || "The file could not be added.");
+            }
         });
 
         reader.addEventListener("error", () => {
@@ -341,7 +385,7 @@ const App = {
         reader.readAsDataURL(selectedFile);
     },
 
-    createLink() {
+    async createLink() {
         const workspace = this.getCurrentWorkspace();
         const name = this.elements["link-name-input"].value.trim();
         const url = this.elements["link-url-input"].value.trim();
@@ -366,18 +410,35 @@ const App = {
             return;
         }
 
-        workspace.links.push({
+        const linkRecord = {
             id: this.makeId("link"),
             name: name || parsedUrl.hostname,
             url: parsedUrl.href
-        });
+        };
 
-        this.saveState();
-        this.closeModal("link-modal");
-        this.clearInputs("link-name-input", "link-url-input");
-        this.renderLinks();
-        this.renderStatistics();
-        this.showToast("Link added.");
+        try {
+            const payload = {
+                id: linkRecord.id,
+                name: linkRecord.name,
+                url: linkRecord.url
+            };
+
+            if (this.state.currentChildBranchId) {
+                payload.childBranchId = this.state.currentChildBranchId;
+            } else {
+                payload.branchId = this.state.currentBranchId;
+            }
+
+            const createdLink = await window.ResearchDeskApi.createLink(payload);
+            workspace.links.push(createdLink);
+            this.closeModal("link-modal");
+            this.clearInputs("link-name-input", "link-url-input");
+            this.renderLinks();
+            this.renderStatistics();
+            this.showToast("Link added.");
+        } catch (error) {
+            this.showToast(error.message || "Link could not be added.");
+        }
     },
 
     openTemporaryFile(fileId) {
@@ -403,7 +464,7 @@ const App = {
        EDITABLE DETAILS AND NOTES
        ========================================================== */
 
-    saveProjectDetails() {
+    async saveProjectDetails() {
         const project = this.getCurrentProject();
 
         if (!project) {
@@ -411,13 +472,22 @@ const App = {
         }
 
         const name = this.elements["project-title"].textContent.trim();
+        const description = this.elements["project-description"].textContent.trim();
         project.name = name || project.name;
-        project.description = this.elements["project-description"].textContent.trim();
-        this.saveState();
-        this.renderAll();
+        project.description = description;
+
+        try {
+            await window.ResearchDeskApi.updateProject(project.id, {
+                name: project.name,
+                description: project.description
+            });
+            this.renderAll();
+        } catch (error) {
+            this.showToast(error.message || "Project could not be saved.");
+        }
     },
 
-    saveWorkspaceDetails() {
+    async saveWorkspaceDetails() {
         const workspace = this.getCurrentWorkspace();
 
         if (!workspace) {
@@ -425,10 +495,27 @@ const App = {
         }
 
         const name = this.elements["research-title"].textContent.trim();
+        const description = this.elements["research-description"].textContent.trim();
         workspace.name = name || workspace.name;
-        workspace.description = this.elements["research-description"].textContent.trim();
-        this.saveState();
-        this.renderAll();
+        workspace.description = description;
+
+        try {
+            if (this.state.currentChildBranchId) {
+                await window.ResearchDeskApi.updateChildBranch(workspace.id, {
+                    name: workspace.name,
+                    description: workspace.description
+                });
+            } else {
+                await window.ResearchDeskApi.updateBranch(workspace.id, {
+                    name: workspace.name,
+                    description: workspace.description
+                });
+            }
+
+            this.renderAll();
+        } catch (error) {
+            this.showToast(error.message || "Workspace could not be saved.");
+        }
     },
 
     saveProjectNotes(notes) {
@@ -436,7 +523,7 @@ const App = {
 
         if (project) {
             project.notes = notes;
-            this.saveState();
+            this.scheduleNotesSave("project", project.id, notes);
         }
     },
 
@@ -445,8 +532,34 @@ const App = {
 
         if (workspace) {
             workspace.notes = notes;
-            this.saveState();
+
+            if (this.state.currentChildBranchId) {
+                this.scheduleNotesSave("childBranch", workspace.id, notes);
+            } else {
+                this.scheduleNotesSave("branch", workspace.id, notes);
+            }
         }
+    },
+
+    scheduleNotesSave(entityType, entityId, notes) {
+        const timerKey = `${entityType}:${entityId}`;
+        const existingTimer = this.noteSaveTimers.get(timerKey);
+
+        if (existingTimer) {
+            window.clearTimeout(existingTimer);
+        }
+
+        const timer = window.setTimeout(async () => {
+            this.noteSaveTimers.delete(timerKey);
+
+            try {
+                await window.ResearchDeskApi.updateNotes(entityType, entityId, notes);
+            } catch (error) {
+                console.warn("Research Desk could not save notes.", error);
+            }
+        }, 400);
+
+        this.noteSaveTimers.set(timerKey, timer);
     },
 
     /* ==========================================================
@@ -471,7 +584,7 @@ const App = {
         this.closeModal("delete-modal");
     },
 
-    confirmDelete() {
+    async confirmDelete() {
         const pendingDelete = this.state.pendingDelete;
 
         if (!pendingDelete) {
@@ -481,58 +594,63 @@ const App = {
         const project = this.getCurrentProject();
         const workspace = this.getCurrentWorkspace();
 
-        if (pendingDelete.type === "project") {
-            this.state.projects = this.state.projects.filter((item) => item.id !== pendingDelete.id);
-            this.goToOrganization();
-        }
+        try {
+            if (pendingDelete.type === "project") {
+                await window.ResearchDeskApi.deleteProject(pendingDelete.id);
+                this.state.projects = this.state.projects.filter((item) => item.id !== pendingDelete.id);
+                this.goToOrganization();
+            }
 
-        if (pendingDelete.type === "branch" && project) {
-            project.branches = project.branches.filter((item) => item.id !== pendingDelete.id);
-            this.openProject(project.id);
-        }
+            if (pendingDelete.type === "branch" && project) {
+                await window.ResearchDeskApi.deleteBranch(pendingDelete.id);
+                project.branches = project.branches.filter((item) => item.id !== pendingDelete.id);
+                this.openProject(project.id);
+            }
 
-        if (pendingDelete.type === "childBranch" && project) {
-            const parentBranch = this.getBranch(project, this.state.currentBranchId);
+            if (pendingDelete.type === "childBranch" && project) {
+                const parentBranch = this.getBranch(project, this.state.currentBranchId);
 
-            if (parentBranch) {
-                this.completeAnimatedRemoval("child-branch-list", pendingDelete.id, () => {
-                    parentBranch.childBranches = parentBranch.childBranches.filter((item) => item.id !== pendingDelete.id);
-                    this.saveState();
-                    this.renderChildBranches();
+                if (parentBranch) {
+                    this.completeAnimatedRemoval("child-branch-list", pendingDelete.id, async () => {
+                        await window.ResearchDeskApi.deleteChildBranch(pendingDelete.id);
+                        parentBranch.childBranches = parentBranch.childBranches.filter((item) => item.id !== pendingDelete.id);
+                        this.renderChildBranches();
+                        this.renderStatistics();
+                        this.showToast("Item deleted.");
+                    });
+                    return;
+                }
+            }
+
+            if (pendingDelete.type === "file" && workspace) {
+                this.completeAnimatedRemoval("file-list", pendingDelete.id, async () => {
+                    await window.ResearchDeskApi.deleteFile(pendingDelete.id);
+                    workspace.files = workspace.files.filter((item) => item.id !== pendingDelete.id);
+                    this.renderFiles();
                     this.renderStatistics();
                     this.showToast("Item deleted.");
                 });
                 return;
             }
-        }
 
-        if (pendingDelete.type === "file" && workspace) {
-            this.completeAnimatedRemoval("file-list", pendingDelete.id, () => {
-                workspace.files = workspace.files.filter((item) => item.id !== pendingDelete.id);
-                this.saveState();
-                this.renderFiles();
-                this.renderStatistics();
-                this.showToast("Item deleted.");
-            });
-            return;
-        }
+            if (pendingDelete.type === "link" && workspace) {
+                this.completeAnimatedRemoval("link-list", pendingDelete.id, async () => {
+                    await window.ResearchDeskApi.deleteLink(pendingDelete.id);
+                    workspace.links = workspace.links.filter((item) => item.id !== pendingDelete.id);
+                    this.renderLinks();
+                    this.renderStatistics();
+                    this.showToast("Item deleted.");
+                });
+                return;
+            }
 
-        if (pendingDelete.type === "link" && workspace) {
-            this.completeAnimatedRemoval("link-list", pendingDelete.id, () => {
-                workspace.links = workspace.links.filter((item) => item.id !== pendingDelete.id);
-                this.saveState();
-                this.renderLinks();
-                this.renderStatistics();
-                this.showToast("Item deleted.");
-            });
-            return;
+            this.state.pendingDelete = null;
+            this.closeModal("delete-modal");
+            this.renderAll();
+            this.showToast("Item deleted.");
+        } catch (error) {
+            this.showToast(error.message || "Item could not be deleted.");
         }
-
-        this.saveState();
-        this.state.pendingDelete = null;
-        this.closeModal("delete-modal");
-        this.renderAll();
-        this.showToast("Item deleted.");
     },
 
     /* ==========================================================
@@ -874,22 +992,27 @@ const App = {
     },
 
     /* ==========================================================
-       LOCAL STORAGE
+       PERSISTENCE AND MIGRATION
        ========================================================== */
 
-    saveState() {
-        const savedState = {
-            projects: this.state.projects.map((project) => this.serializeProject(project))
-        };
-
+    async loadState() {
         try {
-            localStorage.setItem(this.storageKey, JSON.stringify(savedState));
+            const response = await window.ResearchDeskApi.getProjects();
+            this.state.projects = (response.projects || []).map((project) => this.restoreProject(project));
+
+            if (this.state.projects.length) {
+                return;
+            }
+
+            await this.migrateLocalStorageIfPresent();
         } catch (error) {
-            console.warn("Research Desk could not save local data.", error);
+            console.warn("Research Desk could not load server data.", error);
+            this.showToast("Could not load saved data from the server.");
+            this.state.projects = [];
         }
     },
 
-    loadState() {
+    async migrateLocalStorageIfPresent() {
         const savedState = localStorage.getItem(this.storageKey);
 
         if (!savedState) {
@@ -899,47 +1022,20 @@ const App = {
         try {
             const parsedState = JSON.parse(savedState);
 
-            if (!this.isStoredStateValid(parsedState)) {
-                throw new Error("Invalid saved state");
+            if (!this.isStoredStateValid(parsedState) || !parsedState.projects.length) {
+                return;
             }
 
-            this.state.projects = parsedState.projects.map((project) => this.restoreProject(project));
-        } catch (error) {
+            const migrationResult = await window.ResearchDeskApi.migrateLocalStorage(parsedState.projects);
+            this.state.projects = (migrationResult.projects || []).map((project) => this.restoreProject(project));
+
+            localStorage.setItem(this.migrationBackupKey, savedState);
             localStorage.removeItem(this.storageKey);
-            this.state.projects = [];
+            this.showToast("Existing browser data migrated to the server.");
+        } catch (error) {
+            console.warn("Research Desk could not migrate local data.", error);
+            this.showToast("Existing browser data could not be migrated.");
         }
-    },
-
-    serializeProject(project) {
-        return {
-            id: project.id,
-            name: project.name,
-            description: project.description,
-            notes: project.notes,
-            branches: project.branches.map((branch) => this.serializeWorkspace(branch))
-        };
-    },
-
-    serializeWorkspace(workspace) {
-        return {
-            id: workspace.id,
-            name: workspace.name,
-            description: workspace.description,
-            notes: workspace.notes,
-            files: workspace.files.map((file) => ({
-                id: file.id,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                dataUrl: file.dataUrl || null
-            })),
-            links: workspace.links.map((link) => ({
-                id: link.id,
-                name: link.name,
-                url: link.url
-            })),
-            childBranches: workspace.childBranches.map((branch) => this.serializeWorkspace(branch))
-        };
     },
 
     restoreProject(project) {
@@ -1087,4 +1183,8 @@ const App = {
     }
 };
 
-document.addEventListener("DOMContentLoaded", () => App.init());
+document.addEventListener("DOMContentLoaded", () => {
+    App.init().catch((error) => {
+        console.error("Research Desk failed to initialize.", error);
+    });
+});
