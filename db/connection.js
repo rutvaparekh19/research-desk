@@ -2,18 +2,23 @@ const fs = require("fs");
 const path = require("path");
 const Database = require("better-sqlite3");
 
-const DATA_DIR = path.join(__dirname, "..", "data");
-const DB_PATH = process.env.RESEARCH_DESK_DB_PATH || path.join(DATA_DIR, "research.db");
+const DEFAULT_DATA_DIR = path.join(__dirname, "..", "data");
 
 let db = null;
 
+function getDbPath() {
+    return process.env.RESEARCH_DESK_DB_PATH || path.join(DEFAULT_DATA_DIR, "research.db");
+}
+
 function getDb() {
     if (!db) {
-        if (!fs.existsSync(DATA_DIR)) {
-            fs.mkdirSync(DATA_DIR, { recursive: true });
+        const dbPath = getDbPath();
+        const dataDir = path.dirname(dbPath);
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
         }
 
-        db = new Database(DB_PATH);
+        db = new Database(dbPath);
         db.pragma("journal_mode = WAL");
         db.pragma("foreign_keys = ON");
     }
@@ -28,4 +33,15 @@ function closeDb() {
     }
 }
 
-module.exports = { getDb, closeDb, DB_PATH, DATA_DIR };
+module.exports = {
+    getDb,
+    closeDb,
+    getDbPath,
+    get DB_PATH() {
+        return getDbPath();
+    },
+    get DATA_DIR() {
+        return path.dirname(getDbPath());
+    }
+};
+

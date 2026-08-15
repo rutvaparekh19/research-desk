@@ -1,16 +1,24 @@
 {
-  "name": "odesk",
+  "name": "research-desk",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "Lightweight research and project organization desktop application",
+  "main": "main.js",
   "scripts": {
     "build": "esbuild ./src/editor.js --bundle --format=iife --minify --outfile=./PUBLIC/editor.js",
     "test": "node scripts/test-repository.js",
     "test:api": "node scripts/test-api.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "desktop": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "research",
+    "notes",
+    "workspace",
+    "electron"
+  ],
+  "author": "Research Desk",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
@@ -26,6 +34,48 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0"
+  },
+  "build": {
+    "appId": "com.researchdesk.app",
+    "productName": "Research Desk",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "files": [
+      "**/*",
+      "!data/**/*",
+      "!tests/**/*",
+      "!scripts/**/*",
+      "!attached_assets/**/*",
+      "!DOCS/**/*",
+      "!replit.md",
+      "!.replit"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Research Desk"
+    },
+    "portable": {
+      "artifactName": "${productName}-Portable-${version}.${ext}"
+    }
   }
 }
